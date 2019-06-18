@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
 import time
 from Bio import Entrez
+import xml.etree.ElementTree as ET
 
 
 DEBUG = True
@@ -65,7 +65,6 @@ is better / more efficient.
 def get_abstracts(results):
     abstracts_list = []
     for start in range(0, int(results["Count"]), 1):
-        end = min(int(results["Count"]), start + 1)
         # print("Going to download record %i to %i" % (start+1, end))
         fetch_handle = Entrez.efetch(db="pubmed", rettype="abstract",
                                         retmode="xml", retstart=start,
@@ -83,7 +82,6 @@ def get_abstracts(results):
 
 def get_abstracts_from_list(pmids_list):
     abstracts_list = []
-    pmids_abstracts_dict = {}
     for each_pmid in pmids_list:
         fetch_handle = Entrez.efetch(db="pubmed", id=each_pmid, retmode='xml')
         data = fetch_handle.read()
