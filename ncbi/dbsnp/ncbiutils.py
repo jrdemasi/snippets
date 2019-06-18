@@ -10,18 +10,9 @@ def db_query(**kwargs):
     for key, value in kwargs.items():
         args.append(key+"="+str(value))
     qstring = "&".join(args)
-    print(qstring)
     resp = requests.get(BASE_URL + qstring)
     if resp.status_code == 200:
         results = resp.json()
         return(results)
     else:
         print("You've encountered an error and we can't return your results")
-
-def main():
-    results = db_query(db="snp", term="snp_pubmed_cited[sb]", retmax=200000, retstart=1000, retmode="json")
-    print(results)
-    return()
-
-if __name__ == '__main__':
-    main()

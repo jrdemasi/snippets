@@ -1,58 +1,31 @@
 #!/usr/bin/env python3
 
 import time
+import ncbiutils
 from Bio import Entrez
-import xml.etree.ElementTree as ET
 
 
-DEBUG = True
-Entrez.email = "jonathan.demasi@colorado.edu"
-# We should apply for an API key so we get more queries/sec
-Entrez.api_key = None
-
+"""
+Finds all rsids that are explicitly cited in pubmed
+and returns a list
+"""
 def get_complete_rsids():
-    rsidlist = []
-    numresults = 0
-    retstart = 0
-    search_string = "snp_pubmed_cited[sb]"
-    search_results = Entrez.read(Entrez.esearch(db="snp", term=search_string,
-                                                retmax=100000, retstart=retstart, usehistory="y"))
-    print("Found a total of " +
-          search_results["Count"] + " results using search string '" + search_string + "'")
-    numresults = search_results["Count"]
-    rsidlist = rsidlist + search_results["IdList"]
-    additional_queries = int(int(numresults) / 100000)
-    while additional_queries != 0:
-        retstart = retstart + 100000
-        search_results = Entrez.read(Entrez.esearch(db="snp", term=search_string,
-                                                    retmax=100000, retstart=retstart, usehistory="y"))
-        rsidlist = rsidlist + search_results["IdList"]
-        additional_queries = additional_queries - 1
+    results = ncbiutils.db_query(db="snp",retmode="json",retmax=200000,retstart=0,term='snp_pubmed_cited[sb]')
+    rsidlist = results["esearchresult"]["idlist"]
+    for x in range(0, len(rsidlist)):
+        rsidlist[x] = "rs" + rsidlist[x]
     return(rsidlist)
 
-def get_pmids(interm):
-    # This is obsolete now, essentially, but
-    # allows a user to pass a single string
-    # which can be nice.
-    if isinstance(interm, str):
-        interm = "rs" + interm + " AND pubmed_snp_cited[sb]"
-        search_results = Entrez.read(Entrez.esearch(db="pubmed", term=interm,
-                                                    retmax=100000,
-                                                    usehistory="y"))
-        print("Found a total of " +
-              search_results["Count"] + " results using search string '" + interm + "'")
-        return(search_results)
-
-    elif isinstance(interm, list):
-        searchstring = " OR ".join(interm)
-        searchstring = "(" + searchstring + ") AND pubmed_snp_cited[sb]"
-        search_results = Entrez.read(Entrez.esearch(db="pubmed",
-                                                    term=searchstring,
-                                                    retmax=100000,
-                                                    usehistory="y"))
-        print("Found a total of " +
-              search_results["Count"] + " results using search string'" + searchstring + "'")
-    return(search_results)
+"""
+Generates a list of PMIDs that are explicitly cite a given rsid
+"""
+def get_pmids(rsid):
+    searchterm = rsid + "+AND+pubmed_snp_cited[sb]"
+    print(searchterm)
+    results = ncbiutils.db_query(db="pubmed",retmode="json",retmax=200000,restart=0,term=searchterm, api_key="7c0213f7c513fa71fe2cb65b4dfefa76fb09")
+    pmidlist = results["esearchresult"]["idlist"]
+    print(pmidlist)
+    return(pmidlist)
 
 
 """
@@ -95,14 +68,8 @@ def get_abstracts_from_list(pmids_list):
 
 def main():
     rsids = get_complete_rsids()
-    if DEBUG:
-        for x in rsids:
-            print(x)
-    for x in rsids:
-        pmids = get_pmids(x)
-        abstracts = get_abstracts_from_list(pmids)
-        for thing in abstracts:
-            print(thing)
+    for rsid in rsids:
+        get_pmids(rsid)
     return()
 
 if __name__ == '__main__':
