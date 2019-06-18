@@ -54,6 +54,46 @@ def get_pmids(interm):
               search_results["Count"] + " results using search string'" + searchstring + "'")
     return(search_results)
 
+
+"""
+Takes the saved list of results from get_pmids and retrieves
+the raw XML to parse.  Currently goes article by article instead of
+doing them in bulk.  Could go either way. Unsure which way
+is better / more efficient.
+"""
+
+def get_abstracts(results):
+    abstracts_list = []
+    for start in range(0, int(results["Count"]), 1):
+        end = min(int(results["Count"]), start + 1)
+        # print("Going to download record %i to %i" % (start+1, end))
+        fetch_handle = Entrez.efetch(db="pubmed", rettype="abstract",
+                                        retmode="xml", retstart=start,
+                                        retmax=1,
+                                        webenv=results["WebEnv"],
+                                        query_key=results["QueryKey"])
+        data = fetch_handle.read()
+        fetch_handle.close()
+        root = ET.fromstring(data)
+        for abst in root.iter('Abstract'):
+            for sec in abst.iter('AbstractText'):
+                abstracts_list.append(sec.text)
+    return(abstracts_list)
+
+
+def get_abstracts_from_list(pmids_list):
+    abstracts_list = []
+    pmids_abstracts_dict = {}
+    for each_pmid in pmids_list:
+        fetch_handle = Entrez.efetch(db="pubmed", id=each_pmid, retmode='xml')
+        data = fetch_handle.read()
+        fetch_handle.close()
+        root = ET.fromstring(data)
+        for abst in root.iter('Abstract'):
+            for sec in abst.iter('AbstractText'):
+                abstracts_list.append(sec.text)
+    return(abstracts_list)
+
 def main():
     rsids = get_complete_rsids()
     if DEBUG:
@@ -61,7 +101,7 @@ def main():
             print(x)
     for x in rsids:
         get_pmids(x)
-        time.sleep(1)
+        time.sleep(0.5)
     return()
 
 if __name__ == '__main__':
