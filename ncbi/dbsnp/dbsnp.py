@@ -41,7 +41,7 @@ def get_pmids(interm):
                                                     usehistory="y"))
         print("Found a total of " +
               search_results["Count"] + " results using search string '" + interm + "'")
-        return search_results
+        return(search_results)
 
     elif isinstance(interm, list):
         searchstring = " OR ".join(interm)
@@ -77,6 +77,7 @@ def get_abstracts(results):
         for abst in root.iter('Abstract'):
             for sec in abst.iter('AbstractText'):
                 abstracts_list.append(sec.text)
+    print(abstracts_list)
     return(abstracts_list)
 
 
@@ -98,10 +99,11 @@ def main():
         for x in rsids:
             print(x)
     for x in rsids:
-        get_pmids(x)
-        time.sleep(0.5)
+        pmids = get_pmids(x)
+        abstracts = get_abstracts_from_list(pmids)
+        for thing in abstracts:
+            print(thing)
     return()
 
 if __name__ == '__main__':
     main()
-
