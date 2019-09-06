@@ -4,7 +4,8 @@
 Used to trim ZFS snapshots on a FreeNAS appliance if they're being sent from another appliance
 and rather than 1:1 replication you want a different retention policy on the backups.
 There is nothing elegant about this, and in fact it's fairly inefficient.  It was a quick
-solution to a problem I had.  PRs accepted. 
+solution to a problem I had.  PRs accepted.  If you add an actual hostname, you could set 
+verify=True in your http(s) requests.  
 """
 
 import requests
